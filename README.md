@@ -25,7 +25,9 @@ is LibreSSL; if `storeutl` isn't available, install OpenSSL
 ## Installation
 
 k9s loads plugin files from a `plugins` directory next to its config, so no
-YAML merging is needed. Where that directory is depends on your platform and
+YAML merging is needed (see the
+[k9s plugin documentation](https://k9scli.io/topics/plugins/) for details on
+how k9s discovers plugins). Where that directory is depends on your platform and
 your `XDG_*` settings; run `k9s info` and look at the directory of the
 `Plugins:` entry (the `plugins/` directory lives next to `plugins.yaml`).
 
