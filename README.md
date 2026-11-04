@@ -8,19 +8,38 @@ k9s configuration.
 
 | Plugin | Key | Scope | Description |
 | ------ | --- | ----- | ----------- |
-| [`secret-decode-certs`](plugins/secret-decode-certs.yaml) | `Shift-C` | `secrets` | Decode and display every certificate stored in a Secret |
+| [`secret-decode-certs`](plugins/secret-decode-certs.yaml) | `Shift-C` | `secrets` | Show subject, issuer, validity and SANs of every certificate stored in a Secret |
 
 ### secret-decode-certs
 
-Select a Secret in k9s and press `Shift-C`. The plugin walks over all entries
-in `.data`, picks those containing a PEM `BEGIN CERTIFICATE` block, and prints
-the fully decoded certificate(s) (subject, issuer, validity, SANs, ...) in
-`less`. Entries that don't contain certificates are skipped.
+Highlight a Secret in the `:secrets` list and press `Shift-C`. The plugin walks
+over all entries in `.data` and picks those containing a PEM
+`BEGIN CERTIFICATE` block. Bundles with several certificates (e.g. a CA chain)
+are split, and for each certificate it shows the subject, issuer, validity
+dates and Subject Alternative Names in `less`. Entries that don't contain
+certificates are skipped.
 
-**Requires:** `kubectl`, `jq`, `base64`, `less`, and an `openssl` that supports
-`storeutl` (OpenSSL 1.1.1 or newer). Note that the `openssl` shipped with macOS
-is LibreSSL; if `storeutl` isn't available, install OpenSSL
+Example output:
+
+```
+=== tls.crt
+--- certificate 1
+subject=CN = example.com
+issuer=CN = Example CA
+notBefore=Nov  4 11:37:28 2026 GMT
+notAfter=Dec  4 11:37:28 2026 GMT
+X509v3 Subject Alternative Name:
+    DNS:example.com, DNS:www.example.com, IP Address:10.0.0.1
+```
+
+**Requires:** `kubectl`, `jq`, `awk`, `base64`, `less`, and an `openssl` that
+supports `x509 -ext` (OpenSSL 1.1.1 or newer). Note that the `openssl` shipped
+with macOS is LibreSSL and doesn't support `-ext`; install OpenSSL
 (e.g. via Homebrew) and make sure it comes first in your `PATH`.
+
+**Limitation:** k9s only binds plugin shortcuts in list views (and the xray
+tree), not inside a resource's YAML, describe or decode view. Use the shortcut
+from the list.
 
 ## Installation
 
