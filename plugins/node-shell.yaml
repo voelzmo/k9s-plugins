@@ -1,0 +1,33 @@
+# Open a root shell on the selected node.
+#
+# Uses kubectl-node-shell by kvaps, which starts a privileged pod pinned to the
+# node (hostPID/hostIPC/hostNetwork), enters the node's namespaces with nsenter
+# and deletes the pod again when the shell exits:
+#   https://github.com/kvaps/kubectl-node-shell
+# Install via: `kubectl krew install node-shell`
+#
+# Why not the built-in k9s node shell (`s`)? It is behind the `nodeShell`
+# feature gate and uses the `shellPod` image from the k9s config. This plugin
+# makes the image explicit, e.g. for clusters that only admit signed images.
+#
+# Configuration (environment variables, read when the plugin runs):
+#   KUBECTL_NODE_SHELL_IMAGE      image of the shell pod (also understood by
+#                                 kubectl-node-shell itself); defaults to the
+#                                 Gardener ops-toolbelt image below
+#   K9S_NODE_SHELL_NAMESPACE      namespace for the shell pod; default kube-system
+#
+# Requires: kubectl, kubectl-node-shell (krew), jq
+node-shell:
+  shortCut: Shift-H
+  confirm: true
+  dangerous: true
+  description: Open a root shell on the node (privileged pod)
+  scopes:
+    - nodes
+  command: bash
+  background: false
+  args:
+    - -c
+    - |
+      export KUBECTL_NODE_SHELL_IMAGE="${KUBECTL_NODE_SHELL_IMAGE:-europe-docker.pkg.dev/sap-se-gcp-k8s-delivery/releases-public/europe-docker_pkg_dev/gardener-project/releases/gardener/ops-toolbelt:latest}"
+      kubectl node-shell --context "$CONTEXT" -n "${K9S_NODE_SHELL_NAMESPACE:-kube-system}" "$NAME"
