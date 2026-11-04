@@ -10,6 +10,7 @@ k9s configuration.
 | ------ | --- | ----- | ----------- |
 | [`secret-decode-certs`](plugins/secret-decode-certs.yaml) | `Shift-C` | `secrets` | Show subject, issuer, validity and SANs of every certificate stored in a Secret |
 | [`secret-decode-brotli`](plugins/secret-decode-brotli.yaml) | `Shift-B` | `secrets` | Decompress and show brotli-compressed entries of a Secret |
+| [`blame`](plugins/blame.yaml) | `Shift-M` | `all` | Show who last modified each field of the selected resource (via `managedFields`) |
 
 ### secret-decode-certs
 
@@ -52,6 +53,38 @@ skipped because decompression fails, not because it was recognised. Very short
 or unusual values could in theory decompress by accident.
 
 **Requires:** `kubectl`, `jq`, `base64`, `brotli`, `less`.
+
+### blame
+
+Highlight any resource in a list view and press `Shift-M`. The plugin runs
+[`kubectl-blame`](https://github.com/knight42/kubectl-blame), which annotates
+every line of the resource's YAML with the manager and time of its last change
+(from `.metadata.managedFields`), and shows the result in `less`:
+
+```
+kubectl-client-side-apply (Update 34d)   a: "1"
+argocd-controller         (Update 27h)   b: "2"
+```
+
+This is an improved version of the
+[upstream k9s plugin](https://github.com/derailed/k9s/blob/master/plugins/blame.yaml):
+variables are quoted, `-n` is omitted for cluster-scoped resources, the API
+group is passed (`deployments.apps`), and views without a selected resource
+(e.g. containers) show a message instead of an error. The shortcut is
+`Shift-M` instead of `b`, because plain `b` is already bound by k9s in the
+service and port-forward views.
+
+**Requires:** `kubectl-blame` (`kubectl krew install blame`), `less`.
+
+## Shortcuts
+
+Shortcuts used here: `Shift-B` (brotli), `Shift-C` (certs), `Shift-M` (blame).
+In k9s v0.51.0 none of them is bound by a built-in view where these plugins
+apply. Check before adding a plugin: k9s skips a plugin whose key is already
+taken and shows `Plugins load failed!` instead (unless the plugin sets
+`override: true`). Plugins from other collections, such as the ones bundled in
+the k9s repo, may use the same keys. For example, `argocd.yaml` and
+`kubectl-get-in-shell.yaml` both use `Shift-B`.
 
 ## Limitations
 
