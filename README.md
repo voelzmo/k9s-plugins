@@ -11,6 +11,7 @@ k9s configuration.
 | [`secret-decode-certs`](plugins/secret-decode-certs.yaml) | `Shift-C` | `secrets` | Show subject, issuer, validity and SANs of every certificate stored in a Secret |
 | [`secret-decode-brotli`](plugins/secret-decode-brotli.yaml) | `Shift-B` | `secrets` | Decompress and show brotli-compressed entries of a Secret |
 | [`blame`](plugins/blame.yaml) | `Shift-M` | `all` | Show who last modified each field of the selected resource (via `managedFields`) |
+| [`node-shell`](plugins/node-shell.yaml) | `Shift-H` | `nodes` | Open a root shell on the selected node using a configurable (e.g. signed) image |
 
 ### secret-decode-certs
 
@@ -76,15 +77,43 @@ service and port-forward views.
 
 **Requires:** `kubectl-blame` (`kubectl krew install blame`), `less`.
 
+### node-shell
+
+Highlight a node in the `:nodes` list and press `Shift-H`. After a
+confirmation, the plugin runs
+[`kubectl node-shell`](https://github.com/kvaps/kubectl-node-shell), which
+starts a privileged pod on that node, drops you into a root shell in the node's
+namespaces and deletes the pod when you exit. It is equivalent to:
+
+```sh
+KUBECTL_NODE_SHELL_IMAGE=<image> kubectl node-shell --context <ctx> -n kube-system <node>
+```
+
+k9s ships its own node shell (`s`), but it is behind the `nodeShell` feature
+gate and uses the image from the `shellPod` section of the k9s config. This
+plugin sets the image explicitly, which is useful when the cluster only admits
+signed images. The default is the Gardener `ops-toolbelt` image; override it and
+the pod namespace with environment variables set before starting k9s:
+
+| Variable | Default | Purpose |
+| -------- | ------- | ------- |
+| `KUBECTL_NODE_SHELL_IMAGE` | Gardener `ops-toolbelt:latest` | Image of the shell pod |
+| `K9S_NODE_SHELL_NAMESPACE` | `kube-system` | Namespace of the shell pod |
+
+The plugin is marked `dangerous`, so k9s doesn't run it in read-only mode.
+
+**Requires:** `kubectl`, `kubectl-node-shell` (`kubectl krew install node-shell`), `jq`.
+
 ## Shortcuts
 
-Shortcuts used here: `Shift-B` (brotli), `Shift-C` (certs), `Shift-M` (blame).
-In k9s v0.51.0 none of them is bound by a built-in view where these plugins
-apply. Check before adding a plugin: k9s skips a plugin whose key is already
+Shortcuts used here: `Shift-B` (brotli), `Shift-C` (certs), `Shift-H`
+(node-shell), `Shift-M` (blame). In k9s v0.51.0 none of them is bound by a
+built-in view where these plugins apply. Check before adding a plugin: k9s skips a plugin whose key is already
 taken and shows `Plugins load failed!` instead (unless the plugin sets
 `override: true`). Plugins from other collections, such as the ones bundled in
 the k9s repo, may use the same keys. For example, `argocd.yaml` and
-`kubectl-get-in-shell.yaml` both use `Shift-B`.
+`kubectl-get-in-shell.yaml` both use `Shift-B`, and `eks-node-viewer.yaml`
+uses `Shift-X` on nodes.
 
 ## Limitations
 
