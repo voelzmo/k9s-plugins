@@ -1,0 +1,38 @@
+# Show who last modified each field of the selected resource.
+#
+# Annotates every line of the resource's YAML with the manager (and time) of
+# its last change, taken from .metadata.managedFields.
+# Based on the upstream k9s plugin using kubectl-blame by knight42:
+#   https://github.com/knight42/kubectl-blame
+# Install via: `kubectl krew install blame`
+#
+# Differences from the upstream plugin:
+#   - quotes all variables
+#   - omits -n for cluster-scoped resources (empty namespace)
+#   - passes the API group (`deployments.apps`) to avoid ambiguous names
+#   - refuses to run where no resource is selected (container views, xray)
+#
+# Requires: kubectl-blame (krew), less
+blame:
+  shortCut: Shift-M
+  confirm: false
+  description: Blame (who last modified each field)
+  scopes:
+    - all
+  command: bash
+  background: false
+  args:
+    - -c
+    - |
+      if [ -z "$RESOURCE_NAME" ]; then
+        echo "blame: not available in this view (select a resource in a list view)"
+        read -r -p "Press enter to continue"
+        exit 0
+      fi
+      res="$RESOURCE_NAME"
+      [ -n "$RESOURCE_GROUP" ] && res="$RESOURCE_NAME.$RESOURCE_GROUP"
+      args=(--context "$CONTEXT")
+      if [ -n "$NAMESPACE" ] && [ "$NAMESPACE" != "-" ]; then
+        args+=(-n "$NAMESPACE")
+      fi
+      kubectl-blame "$res" "$NAME" "${args[@]}" 2>&1 | less
