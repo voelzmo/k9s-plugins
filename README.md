@@ -9,6 +9,7 @@ k9s configuration.
 | Plugin | Key | Scope | Description |
 | ------ | --- | ----- | ----------- |
 | [`secret-decode-certs`](plugins/secret-decode-certs.yaml) | `Shift-C` | `secrets` | Show subject, issuer, validity and SANs of every certificate stored in a Secret |
+| [`secret-decode-brotli`](plugins/secret-decode-brotli.yaml) | `Shift-B` | `secrets` | Decompress and show brotli-compressed entries of a Secret |
 
 ### secret-decode-certs
 
@@ -37,9 +38,25 @@ supports `x509 -ext` (OpenSSL 1.1.1 or newer). Note that the `openssl` shipped
 with macOS is LibreSSL and doesn't support `-ext`; install OpenSSL
 (e.g. via Homebrew) and make sure it comes first in your `PATH`.
 
-**Limitation:** k9s only binds plugin shortcuts in list views (and the xray
-tree), not inside a resource's YAML, describe or decode view. Use the shortcut
-from the list.
+### secret-decode-brotli
+
+Highlight a Secret in the `:secrets` list and press `Shift-B`. The plugin
+tries to decompress every entry in `.data` as brotli. Entries that decompress
+to something non-empty are shown in `less`, labelled `(brotli)`. If the content
+is JSON it is pretty-printed, otherwise it is shown as-is. All other entries are
+skipped.
+
+Brotli has no magic bytes, so there is no header to check. Detection works by
+attempting decompression, which means that an entry which isn't brotli is
+skipped because decompression fails, not because it was recognised. Very short
+or unusual values could in theory decompress by accident.
+
+**Requires:** `kubectl`, `jq`, `base64`, `brotli`, `less`.
+
+## Limitations
+
+k9s only binds plugin shortcuts in list views (and the xray tree), not inside a
+resource's YAML, describe or decode view. Use the shortcuts from the list.
 
 ## Installation
 
